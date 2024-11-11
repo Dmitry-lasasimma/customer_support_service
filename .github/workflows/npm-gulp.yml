@@ -6,32 +6,59 @@ on:
     
 jobs:
   build:
-    runs-on: self-hosted  # Ensure this is the correct label for your runner
+    runs-on: self-hosted  # Using a self-hosted runner
+
+    strategy:
+      matrix:
+        node-version: [22.x]
 
     steps:
     - uses: actions/checkout@v4
 
+    # Set up Docker Buildx (advanced Docker build capabilities)
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
 
-    - name: Ensure Docker permissions
-      run: sudo chmod 666 /var/run/docker.sock
-
+    # Log in to Docker Hub (if pushing to Docker Hub)
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
+    # Use Node.js with the specified version
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    # Install dependencies for the Node.js project
+    - name: Install dependencies
+      run: |
+        touch .env.development
+        echo "${{ secrets.ENV_FILE }}" > .env.development
+        npm install
+
+    # Install Gulp locally in the project
+    - name: Install Gulp locally
+      run: |
+        npm install gulp --save-dev
+
+    # Ensure Docker permissions (add current user to the Docker group)
+    - name: Ensure Docker permissions
+      run: sudo usermod -aG docker $USER
+
+    # Build Docker image using Dockerfile
     - name: Build Docker image using Dockerfile
       run: |
-        sudo docker build -t myusername/myapp:${{ github.sha }} .
+        docker build -t myusername/myapp:${{ github.sha }} .
 
+    # Run Docker Compose to start services
     - name: Run Docker Compose
       run: |
-        sudo docker-compose -f docker-compose.yml up --build -d
+        docker-compose -f docker-compose.yml up --build -d
 
+    # Run Gulp tasks inside the Docker container
     - name: Run Gulp inside Docker container
       run: |
-        sudo docker-compose exec <service-name> npx gulp
-
+        docker-compose exec <service-name> npx gulp  # Replace <service-name> with your Docker service name
