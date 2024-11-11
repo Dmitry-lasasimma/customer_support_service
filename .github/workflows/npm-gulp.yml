@@ -1,11 +1,12 @@
-name: NodeJS with Gulp
+name: NodeJS with Gulp and Docker
 
 on:
   push:
     branches: [ "main" ]
+    
 jobs:
   build:
-    runs-on: self-hosted
+    runs-on: self-hosted  # Using a self-hosted runner
 
     strategy:
       matrix:
@@ -13,6 +14,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Log in to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
@@ -29,6 +39,14 @@ jobs:
       run: |
         npm install gulp --save-dev
 
-    - name: Run Gulp
+    - name: Build Docker image using Dockerfile
       run: |
-        npx gulp
+        docker build -t myusername/myapp:${{ github.sha }} .
+
+    - name: Run Docker Compose
+      run: |
+        docker-compose -f docker-compose.yml up --build -d
+
+    - name: Run Gulp inside Docker container
+      run: |
+        docker-compose exec <service-name> npx gulp  # Replace <service-name> with your Docker service name
