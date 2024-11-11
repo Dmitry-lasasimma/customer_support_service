@@ -3,9 +3,6 @@ name: NodeJS with Gulp
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,10 +25,10 @@ jobs:
         echo "${{ secrets.ENV_FILE }}" > .env.development
         npm install
 
-    - name: Install Gulp CLI globally
+    - name: Install Gulp locally
       run: |
-        npm install -g gulp-cli
+        npm install gulp --save-dev
 
     - name: Run Gulp
       run: |
-        gulp
+        npx gulp
