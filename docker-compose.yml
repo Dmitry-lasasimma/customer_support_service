@@ -1,0 +1,22 @@
+version: "3"
+services:
+  customer-support-server:
+    image: nodejs
+    container_name: customer-support-server
+    restart: always
+    build: .
+    ports:
+      - "9000:9000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - customer-support-network
+
+networks:
+  customer-support-network:
+    driver: bridge
+    name: customer-support-network
+
+volumes:
+  node_modules:
