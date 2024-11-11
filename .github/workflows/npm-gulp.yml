@@ -25,6 +25,6 @@ jobs:
     - name: Build
       run: |
         touch .env.development
-        echo "${{ secret.ENV_FILE }}" > .env.development
+        echo "${{ secrets.ENV_FILE }}" > .env.development
         npm install
         gulp
